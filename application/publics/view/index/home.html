@@ -1,0 +1,175 @@
+{include file="public:head" /}
+
+<div class="layui-fluid"  id="home">
+  <div class="layui-row layui-col-space15">
+    <!-- 服务器信息 -->
+    <div class="layui-col-sm12">
+      <div class="layui-card">
+        <div class="layui-card-header">软件包信息</div>
+        <div class="layui-card-body">
+          <div class="layui-row layui-form" lay-filter="tabledata">
+            <table class="layui-table ">
+              <tr>
+                <td>项目开关</td>
+                <td>
+                  <input lay-filter="onoff" type="checkbox" name="status" lay-skin="switch" lay-text="开启|关闭">
+                </td>
+              </tr>
+              <tr>
+                <td>应用名称</td>
+                <td>{$download.name}</td>
+              </tr>
+              <tr>
+                <td>应用大小</td>
+                <td>{$download.size} KB</td>
+              </tr>
+              <tr>
+                <td>安卓应用包</td>
+                <td>{$download.android_url}</td>
+              </tr>
+              <tr>
+                <td>IOS应用包</td>
+                <td>{$download.ios_url}</td>
+              </tr>
+              <tr>
+                <td>LOGO</td>
+                <td>
+                  <button onclick="getlogo()" type="button" class="layui-btn layui-btn-sm">查看logo</button>
+                </td>
+              </tr>
+              <tr>
+                <td>版本信息</td>
+                <td>{$download.version}</td>
+              </tr>
+              <tr>
+                <td>获取下载页面</td>
+                <td>
+                  <button onclick="getlink()" type="button" class="layui-btn layui-btn-sm">获取链接</button>
+                  <button onclick="getQRCode()" type="button" class="layui-btn layui-btn-sm">生成二维码</button>
+                  <button onclick="update()" type="button" class="layui-btn layui-btn-normal layui-btn-sm">修改信息</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 服务器信息 -->
+    <div class="layui-col-sm12">
+      <div class="layui-card">
+        <div class="layui-card-header">下载情况</div>
+        <div class="layui-card-body">
+          <div class="layui-row">
+            <table class="layui-table">
+              <tr>
+                <td>总下载量</td>
+                <td>{$download.total_download}</td>
+              </tr>
+              <tr>
+                <td>剩余下载量</td>
+                <td>{$download.user_download}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  layui.use('form', function() {
+    var form = layui.form
+    var status = parseInt("{$download.status}")
+
+    form.val('tabledata', {
+      'status': status
+    })
+
+    form.on('switch(onoff)', function(data) {
+      var status = data.elem.checked ? 1 : 0
+
+      layer.load()
+      $.post("{:url('update')}", { status: status }, function(res) {
+        layer.closeAll()
+        if (res.code !== 0) {
+          layer.msg('切换失败')
+        }
+      })
+    })
+  })
+
+  // 获取链接
+  var getlink = function() {
+    var html  = '<div style="padding: 20px">'
+        html += '<input id="page" type="text" class="layui-input" value="{$download.download_page}">'
+        html += '<button onclick="copyLink()" style="margin-top: 10px" class="layui-btn">复制链接</button>'
+        html += '</div>'
+
+    layer.open({
+      type: 1,
+      area: ['400px', '200px'],
+      content: html,
+      title: '下载页面'
+    })
+  }
+
+  // 获取二维码
+  var getQRCode = function() {
+    var html  = '<div style="padding: 20px">'
+        html += '<div id="qrCode"></div>'
+        html += '<button onclick="downloadQr()" style="margin: 0 auto; margin-top: 20px;" class="layui-btn">下载二维码</button>'
+        html += '</div>'
+
+    layer.open({
+      type: 1,
+      area: ['300px', '400px'],
+      content: html,
+      title: '获取二维码'
+    })
+
+    $('#qrCode').qrcode("{$download.download_page}")
+  }
+
+  // copy链接
+  var copyLink = function() {
+    var Url = document.getElementById("page")
+    Url.select()
+    document.execCommand("copy")
+  }
+
+  // 下载二维码
+  var downloadQr = function() {
+    var data = $("canvas")[0].toDataURL().replace("image/png", "image/octet-stream;");//获取二维码值，并修改响应头部。　　　
+    var filename="qrcode.png";//保存的图片名称和格式，canvas默认使用的png格式。这个格式效果最好。
+    var save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
+    save_link.href = data;
+    save_link.download = filename;
+    var event = document.createEvent('MouseEvents');
+    event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    save_link.dispatchEvent(event);
+  }
+
+  // 查看logo
+  var getlogo = function() {
+    var html = '<img style="width: 250px; height: 250px" src="{$download.logo}" />'
+
+    layer.open({
+      type: 1,
+      content: html,
+      title: "LOGO",
+      area: ['250px', '300px']
+    })
+  }
+
+  // 修改信息
+  var update = function() {
+    layer.open({
+      type: 2,
+      area: ['100%', '100%'],
+      title: "修改信息",
+      content: "{:url('index/update')}"
+    })
+  }
+</script>

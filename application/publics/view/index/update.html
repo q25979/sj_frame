@@ -1,0 +1,258 @@
+{include file="public:head" /}
+{js href="/public/static/js/qiniu.min.js" /}
+
+<style>
+  body { background: white; }
+  .logo { width: 40px; height: 40px; }
+  .btnw { width: 112px; text-align: center; }
+</style>
+
+<div class="layui-fluid">
+  <div class="layui-form" lay-filter="tabledata">
+    <div class="layui-form-item">
+      <label class="layui-form-label">应用名称</label>
+      <div class="layui-input-block">
+        <input type="text" name="name" required  lay-verify="required" placeholder="请输入应用名称" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">应用大小KB</label>
+      <div class="layui-input-block">
+        <input type="text" id="size" name="size" required  lay-verify="required" placeholder="请输入应用大小" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">安桌应用宝</label>
+      <div class="layui-input-block">
+        <button type="button" class="layui-btn btnw" id="androidbtn">
+          <i class="layui-icon">&#xe857;</i>上传安卓
+        </button>
+        <span id="android">{$download.android_url}</span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">IOS应用宝</label>
+      <div class="layui-input-block">
+        <button type="button" class="layui-btn btnw" id="iosbtn">
+          <i class="layui-icon">&#xe857;</i>上传IOS
+        </button>
+        <span id="ios">{$download.ios_url}</span>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">LOGO</label>
+      <div class="layui-input-block">
+        <button type="button" class="layui-btn btnw" id="logobtn">
+          <i class="layui-icon">&#xe67c;</i>上传图片
+        </button>
+        <img id="logo" class="logo" src="{$download.logo}" alt="">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">二维码</label>
+      <div class="layui-input-block">
+        <button type="button" class="layui-btn btnw" id="qrcodebtn">
+          <i class="layui-icon">&#xe67c;</i>上传图片
+        </button>
+        <img id="qrcode" class="logo" src="{$download.qrcode}" alt="">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">版本信息</label>
+      <div class="layui-input-block">
+        <input type="text" name="version" required  lay-verify="required" placeholder="请输入版本信息" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-input-block">
+        <button class="layui-btn" lay-submit lay-filter="appSubmit">立即提交</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var domain = 'https://qn.wrongdoing.wang/'
+  var androidApp = '',
+      iosApp = '',
+      logoImg = '',
+      qrcode = ''
+
+  layui.use(['form', 'upload'], function() {
+    var form = layui.form
+    var upload = layui.upload
+
+    form.val('tabledata', {
+      'name': "{$download.name}",
+      'size': "{$download.size}",
+      'version': "{$download.version}"
+    })
+
+    if ("{$download.logo}" !== "" || "{$download.logo}" != null) {
+      logoImg = "{$download.logo}"
+    }
+
+    if ("{$download.android_url}" !== "" || "{$download.android_url}" != null) {
+      androidApp = "{$download.android_url}"
+    }
+
+    if ("{$download.ios_url}" !== "" || "{$download.ios_url}" != null) {
+      iosApp = "{$download.ios_url}"
+    }
+
+    if ("{$download.qrcode}" !== "" || "{$download.qrcode}" != null) {
+      qrcode = "{$download.qrcode}"
+    }
+
+    // logo分片上传
+    var logo = upload.render({
+      elem: '#logobtn',
+      auto: false,
+      choose: function(obj) {
+        obj.preview(function (index, file) {
+          sliceUpload(file, "logo")
+        })
+        return false
+      }
+    })
+
+    // qr分片上传
+    var qr = upload.render({
+      elem: '#qrcodebtn',
+      auto: false,
+      choose: function(obj) {
+        obj.preview(function (index, file) {
+          sliceUpload(file, "qr")
+        })
+        return false
+      }
+    })
+
+    // android分片上传
+    var android = upload.render({
+      elem: '#androidbtn',
+      auto: false,
+      accept: 'file',
+      exts: 'apk',
+      choose: function(obj) {
+        obj.preview(function (index, file) {
+          sliceUpload(file, "android")
+        })
+        return false
+      }
+    })
+
+    // ios分片上传
+    var ios = upload.render({
+      elem: '#iosbtn',
+      auto: false,
+      accept: 'file',
+      exts: 'ipa',
+      choose: function(obj) {
+        obj.preview(function (index, file) {
+          sliceUpload(file, "ios")
+        })
+        return false
+      }
+    })
+
+    // 提交
+    form.on('submit(appSubmit)', function(data) {
+      var res = data.field
+      var post = {
+        name: res.name,
+        size: res.size,
+        android_url: androidApp,
+        ios_url: iosApp,
+        logo: logoImg,
+        version: res.version,
+        qrcode: qrcode
+      }
+
+      if (post.android_url === '') {
+        layer.msg('请上传安卓应用包')
+        return false
+      }
+
+      if (post.ios_url === '') {
+        layer.msg('请上传ios应用包')
+        return false
+      }
+
+      if (post.logo === '') {
+        layer.msg('请上传logo')
+        return false
+      }
+
+      layer.load()
+      $.post('{:url("update")}', post, function(res) {
+        layer.closeAll()
+        if (res.code === 0) {
+          layer.msg(res.msg, { icon: 6 })
+        } else {
+          layer.msg(res.msg, { icon: 5 })
+        }
+      })
+    })
+  })
+
+  var sliceUpload = function(file, type) {
+    var name = file.name,
+        size = file.size,
+        succeed = 0
+
+    var shardSize = 1 * 1024 * 1024,
+        shardCount = Math.ceil(size / shardSize)
+
+    var qiniuKey  = "app/" + (new Date()).getTime() + name
+
+    var observer = {
+      next(res) {
+        // 进度
+        if (type === 'ios') {
+          $("#ios").html(res.total.percent.toFixed(2) + "%")
+        } else if (type === 'android') {
+          $("#android").html(res.total.percent.toFixed(2) + "%")
+          $("#size").val(res.total.loaded)
+        } else if (type === 'qr' || type === 'logo') {
+          layer.load()
+        }
+      },
+      err(err) {
+        console.log('失败:', err)
+      },
+      complete(res) {
+        if (type === 'ios') {
+          iosApp = domain + res.key
+          $("#ios").html("100.00% 上传完成")
+        } else if (type === 'android') {
+          androidApp = domain + res.key
+          $("#android").html("100.00% 上传完成")
+        } else if (type === 'qr') {
+          layer.closeAll()
+          qrcode = domain + res.key
+          $("#qrcode").attr('src', domain + res.key)
+        } else if (type === 'logo') {
+          layer.closeAll()
+          logoImg = domain + res.key
+          $("#logo").attr('src', domain + res.key)
+        }
+      }
+    }
+    var putExtra = {
+      fname: name,
+      mimeType: null,
+      params: {}
+    }
+    var config = {
+      concurrentRequestLimit: 2
+    }
+
+    $.get('{:url("Upload/gettoken")}', function(res) {
+      var token = res.token
+
+      var observable = qiniu.upload(file, qiniuKey, token, putExtra, config)
+      var subscription = observable.subscribe(observer)
+    })
+  }
+</script>

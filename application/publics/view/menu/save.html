@@ -1,0 +1,115 @@
+{include file="public:head" /}
+
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-sm12">
+      <div class="layui-card">
+        <div class="layui-card-body pt__30">
+          <div class="layui-form" lay-filter="form">
+            <div class="layui-form-item">
+              <label class="layui-form-label">上级</label>
+              <div class="layui-input-inline input_300">
+                <select name="parent_id" lay-verify="required">
+                  <option value="0">/</option>
+                  {volist name="parent" id="vo"}
+                    <option value="{$vo.id}">{$vo.name}</option>
+                  {/volist}
+                </select>
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">状态</label>
+              <div class="layui-input-inline input_300">
+                <input type="radio" name="status" value="1" title="显示" checked>
+                <input type="radio" name="status" value="0" title="隐藏">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">类型</label>
+              <div class="layui-input-inline input_300">
+                <input type="radio" name="type" value="1" title="显示菜单" checked>
+                <input type="radio" name="type" value="0" title="权限认证">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">名称</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="name" required  lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">模型</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="app" required  lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">控制器</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="model" required  lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">方法</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="action" required  lay-verify="required" autocomplete="off" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">参数</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="params" class="layui-input">
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <label class="layui-form-label">图标</label>
+              <div class="layui-input-inline input_300">
+                <input type="text" name="icon" autocomplete="off" class="layui-input">
+              </div>
+              <div class="layui-form-mid layui-word-aux">
+                <a href="https://www.layui.com/doc/element/icon.html" target="_balck">选择图标</a> (只需填如：layui-icon-username)
+              </div>
+            </div>
+            <div class="layui-form-item">
+              <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submit">立即保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form
+
+  form.on('submit(submit)', function(res) {
+    var data = res.field
+
+    if ("{$info}") {
+      data.id = "{$info['id']}"
+      _671.authPost('update', data)
+    } else {
+      _671.authPost('add', data)
+    }
+  })
+
+  // 初始化
+  if ("{$info}") {
+    form.val("form", {
+      name: "{$info['name']}",
+      status: "{$info['status']}",
+      type: "{$info['type']}",
+      app: "{$info['app']}",
+      model: "{$info['model']}",
+      action: "{$info['action']}",
+      icon: "{$info['icon']}",
+      params: "{$info['params']}",
+      parent_id: "{$info['parent_id']}"
+    })
+  }
+})
+</script>

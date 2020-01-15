@@ -1,0 +1,115 @@
+{include file="public:head" /}
+
+<div class="layui-fluid"  id="home">
+  <div class="layui-row layui-col-space15">
+    <!-- 服务器信息 -->
+    <div class="layui-col-sm12">
+      <div class="layui-card">
+        <div class="layui-card-header">后台菜单</div>
+        <div class="layui-card-body">
+          <button type="button" class="layui-btn" onclick="save()">添加菜单</button>
+          <table id="table" lay-filter="table"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  layui.config({
+    base: '/public/static/plug-in/'
+  }).extend({
+    treeTable: 'treeTable/treeTable'
+  }).use(['treeTable', 'form'], function() {
+    var treeTable = layui.treeTable,
+        form = layui.form
+
+    // 渲染表格
+    var ins = treeTable.render({
+      elem: "#table",
+      tree: {
+        iconIndex: 1
+      },
+      cols: [
+        {field: 'sort', title: '排序', width: 60, align: 'center', edit: 'number'},
+        {field: 'name', title: '菜单名称', width: 180},
+        {field: 'app', title: '应用', align: 'center'},
+        {field: 'model', title: '控制器', align: 'center'},
+        {field: 'action', title: '方法', align: 'center'},
+        {title: '状态', align: 'center', templet: '#statusTpl'},
+        {title: '类型', align: 'center', templet: '#typeTpl'},
+        {title: '操作', align: 'center', templet: '#setTool', width: 120, fixed: 'right'}
+      ],
+      reqData: function(data, callback) {
+        $.get('list', function(res) {
+          callback(res)
+        })
+      }
+    })
+
+    // 排序监听
+    treeTable.on('edit(table)', function(obj) {
+      var data = {
+        'id': obj.data.id,
+        'sort': obj.value
+      }
+
+      _671.post('update', data, function(res) {
+        if (res.code !== 200) {
+          layer.msg(res.msg, { icon: 5 })
+        }
+      })
+    })
+
+    // 状态开关
+    form.on('switch(status)', function(obj) {
+      var data = {
+        'id': obj.elem.id,
+        'status': obj.elem.checked ? 1 : 0
+      }
+
+      _671.post('update', data, function(res) {
+        if (res.code !== 200) {
+          layer.msg(res.msg, { icon: 5 })
+        }
+      })
+    })
+
+    // 工具事件
+    treeTable.on('tool(table)', function(obj) {
+      var data = obj.data
+
+      if (obj.event === 'update') {
+        _671.iframe('修改菜单', 'save?id='+data.id)
+      } else if (obj.event === 'delete') {
+        _671.deleted(data.id, 'delete')
+      }
+    })
+  })
+
+  // 添加菜单
+  var save = function() {
+    _671.iframe('添加菜单', '{:url("add")}')
+  }
+</script>
+
+<script type="text/html" id="setTool">
+  <button type="button" lay-event="update" class="layui-btn layui-btn-normal layui-btn-xs">修改</button>
+  <button type="button" lay-event="delete" class="layui-btn layui-btn-danger layui-btn-xs">删除</button>
+</script>
+
+<script type="text/html" id="statusTpl">
+  {{# if (d.status == 1) { }}
+    <input type="checkbox" id="{{d.id}}" lay-skin="switch" lay-filter="status" lay-text="开启|关闭" checked>
+  {{# } else { }}
+    <input type="checkbox" id="{{d.id}}" lay-skin="switch" lay-filter="status" lay-text="开启|关闭">
+  {{# } }}
+</script>
+
+<script type="text/html" id="typeTpl">
+  {{# if (d.type == 1) { }}
+    显示菜单
+  {{# } else { }}
+    权限认证
+  {{# } }}
+</script>
